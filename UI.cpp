@@ -62,7 +62,7 @@ void UI::displayMenu() {
     std::cout << "\nWelcome to the Vending Machine\n";
     std::cout << "1. Add a product (code, name, price, quantity)\n";
     std::cout << "2. Remove a product (code)\n";
-    std::cout << "3. Add currency (value)\n";
+    std::cout << "3. Add currency (value,quanitity,type(leu))\n";
     std::cout << "4. Remove currency (value, quantity)\n";
     std::cout << "5. Make a purchase (code, amount)\n";
     std::cout << "6. Display products\n";
@@ -93,22 +93,24 @@ void UI::removeProductUI(const std::vector<std::string>& args) {
 }
 
 void UI::addCurrencyUI(const std::vector<std::string>& args) {
-    if (args.size() < 2) {
-        throw std::runtime_error("Adding currency requires 2 arguments.\n");
+    if (args.size()!=3) {
+        throw std::runtime_error("Adding currency requires 3 arguments.\n");
     }
-    std::string currencyStr = args[0];
-    int quantity = std::stoi(args[1]);    // convert string to int
+    std::string currencyStr = "";
+    int quantity = 0;
+    currencyStr = args[0] + " " + args[1];
+    quantity = std::stoi(args[2]);
 
     service.addCurrency(currencyStr, quantity);
 }
 
 void UI::removeCurrencyUI(const std::vector<std::string>& args) {
-    if (args.size() < 2) {
+    if (args.size() != 3) {
         throw std::runtime_error("Removing currency requires 2 arguments.\n");
     }
-    std::string currencyStr = args[0];
-    int quantity = std::stoi(args[1]);    // convert string to int
-
+    std::string currencyStr = "";
+    int quantity = 0;
+    currencyStr = args[0] + " " + args[1];
     service.removeCurrency(currencyStr, quantity);
 }
 
