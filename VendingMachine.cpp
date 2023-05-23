@@ -2,6 +2,7 @@
 #include "VendingMachine.h"
 #include "FileRepository.h"
 #include <algorithm>
+#include <iostream>
 
 VendingMachine::VendingMachine(const std::string& productFile, const std::string& currencyFile)
     : productRepo(productFile), currencyRepo(currencyFile) {
@@ -36,8 +37,26 @@ std::vector<Currency> VendingMachine::getBills() const {
     return bills;
 }
 
-void VendingMachine::addProduct(const Product& product) {
-    productRepo.addProduct(product);
+void VendingMachine::addProduct(const Product& newProduct) {
+    int quantity = newProduct.getQuantity();
+    std::string code = newProduct.getCode();
+    std::string name = newProduct.getName();
+    int price = newProduct.getPrice();
+
+    for (Product& existingProduct : productRepo.getAllProducts()) {
+        if (code == existingProduct.getCode()) {
+
+            if (existingProduct.getPrice() != price || existingProduct.getName() != name) {
+                throw std::runtime_error("Products with the same code must also have the same name and price.");
+            }
+
+            existingProduct.setQuantity(existingProduct.getQuantity() + quantity);
+            productRepo.updateProduct(existingProduct);
+            return;
+        }
+    }
+
+    productRepo.addProduct(newProduct);
 }
 
 void VendingMachine::removeProduct(const std::string& code) {
@@ -45,6 +64,13 @@ void VendingMachine::removeProduct(const std::string& code) {
 }
 
 void VendingMachine::addCurrency(int value, int quantity) {
+    for (Currency currency : currencyRepo.getAllCurrencies()) {
+        if (currency.getValue() == value) {
+            currency.setQuantity(currency.getQuantity() + quantity);
+            currencyRepo.updateCurrency(currency);
+            return;
+        }
+    }
     Currency currency(value, quantity);
     currencyRepo.addCurrency(currency);
     if (value <= 50) {
@@ -59,36 +85,18 @@ void VendingMachine::addCurrency(int value, int quantity) {
 
 void VendingMachine::removeCurrency(int value, int quantity) {
     // First, we need to check if we have enough coins or bills of the specific value
-    std::vector<Currency>* currencyContainer;
-    if (value <= 50) {
-        // This is a coin
-        currencyContainer = &coins;
+    for (Currency currency : currencyRepo.getAllCurrencies())
+    {
+        if (currency.getValue() == value) {
+            if (currency.getQuantity() < quantity) {
+                throw std::runtime_error("Not enough currency of this value to remove");
+            }
+            currency.setQuantity(currency.getQuantity() - quantity);
+            currencyRepo.updateCurrency(currency);
+            return;
+        }
     }
-    else {
-        // This is a bill
-        currencyContainer = &bills;
-    }
-
-    int count = std::count_if(currencyContainer->begin(), currencyContainer->end(), [value](Currency& currency) {
-        return currency.getValue() == value;
-        });
-
-    if (count < quantity) {
-        throw std::runtime_error("Not enough currency of this value to remove");
-    }
-
-    // Remove the currency from the coins or bills vector
-    for (int i = 0; i < quantity; i++) {
-        auto it = std::find_if(currencyContainer->begin(), currencyContainer->end(), [value](Currency& currency) {
-            return currency.getValue() == value;
-            });
-        currencyContainer->erase(it);
-    }
-
-    // Finally, we need to update the currencyRepo
-    Currency currency = *currencyRepo.findCurrencyByValue(value);
-    currency.setQuantity(currency.getQuantity() - quantity);
-    currencyRepo.updateCurrency(currency);
+    throw std::runtime_error("Currency not found");
 }
 
 Product* VendingMachine::findProduct(const std::string& code) {
@@ -135,11 +143,11 @@ void VendingMachine::updateCurrency(const Currency& currency) {
     *current = currency;
 }
 
-void VendingMachine::makePurchase(const std::string& productCode, int paidAmount) {
+void VendingMachine::makePurchase(const std::string& productCode, double paidAmount) {
     Product* product = findProduct(productCode);
 
     if (product == nullptr) {
-        throw std::runtime_error("Product not found");
+        throw std::runtime_error("Product not found.");
     }
 
     if (product->getQuantity() == 0) {
@@ -164,14 +172,12 @@ void VendingMachine::makePurchase(const std::string& productCode, int paidAmount
     int remaining = change;
     for (Currency& currency : coins) {
         int value = currency.getValue();
-        int count = currency.getQuantity();
 
-        while (remaining >= value && count > 0) {
+        while (remaining >= value && currency.getQuantity() > 0) {
             remaining -= value;
-            count--;
+            currency.setQuantity(currency.getQuantity() - 1);
         }
-
-        currency.setQuantity(count);
+        currencyRepo.updateCurrency(currency);
 
         if (remaining == 0) {
             break;
@@ -180,7 +186,6 @@ void VendingMachine::makePurchase(const std::string& productCode, int paidAmount
 
     // Save changes to files
     productRepo.saveProductsToFile();
-    currencyRepo.saveCurrenciesToFile();
 }
 
 void VendingMachine::saveProductsToFile() const {

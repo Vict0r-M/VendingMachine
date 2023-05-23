@@ -15,6 +15,7 @@ public:
     void addCurrency(Currency currency) override;
     void removeCurrency(int value) override;
     void updateCurrency(const Currency& updatedCurrency) override;
+    void updateProduct(const Product& updatedProduct) override;
     std::vector<Currency> getAllCurrencies() const override;
 
     Product* findProductByCode(const std::string& code) override;

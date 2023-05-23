@@ -15,6 +15,7 @@ public:
     virtual std::vector<Product> getAllProducts() const;
 
     virtual void updateCurrency(const Currency& updatedCurrency);
+    virtual void updateProduct(const Product& updatedProduct);
     virtual void addCurrency(Currency currency);
     virtual void removeCurrency(int value);
     virtual std::vector<Currency> getAllCurrencies() const;

@@ -23,7 +23,7 @@ public:
     Product* findProduct(const std::string& code);
     Currency* findCurrency(int value);
     bool canMakeChange(int amount) const;
-    void purchase(const std::string& productCode, int paidAmount);
+    void purchase(const std::string& productCode, double paidAmount);
     std::vector<Product> getProducts() const;
     std::vector<Currency> getCurrencies() const;
     void undo();
