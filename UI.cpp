@@ -180,15 +180,11 @@ void UI::purchaseUI(const std::vector<std::string>& args) {
         service.purchase(code, paidamount);
         std::cout << "Purchase successful.\n";
     }
-    catch (const std::runtime_error& e) {
-        // Handle case when the machine can't provide change
-        if (std::string(e.what()) == "Vending machine cannot provide change") {
-            // Remove inserted currency
-            for (const auto& currencyPair : insertedCurrency) {
-                service.removeCurrency(currencyPair.first, currencyPair.second);
-            }
-            throw;  // Re-throw the exception
+    catch (const std::runtime_error& e) {    
+        for (const auto& currencyPair : insertedCurrency) {
+            service.removeCurrency(currencyPair.first, currencyPair.second);
         }
+        throw;  // Re-throw the exception      
     }
 }
 

@@ -64,39 +64,75 @@ void VendingMachine::removeProduct(const std::string& code) {
 }
 
 void VendingMachine::addCurrency(int value, int quantity) {
-    for (Currency currency : currencyRepo.getAllCurrencies()) {
+    bool exists = false;
+    for (Currency& currency : coins) {
         if (currency.getValue() == value) {
             currency.setQuantity(currency.getQuantity() + quantity);
             currencyRepo.updateCurrency(currency);
-            return;
+            exists = true;
+            break;
         }
     }
-    Currency currency(value, quantity);
-    currencyRepo.addCurrency(currency);
-    if (value <= 50) {
-        // This is a coin
-        coins.push_back(currency);
+
+    if (!exists) {
+        for (Currency& currency : bills) {
+            if (currency.getValue() == value) {
+                currency.setQuantity(currency.getQuantity() + quantity);
+                currencyRepo.updateCurrency(currency);
+                exists = true;
+                break;
+            }
+        }
     }
-    else {
-        // This is a bill
-        bills.push_back(currency);
+
+    if (!exists) {
+        Currency currency(value, quantity);
+        currencyRepo.addCurrency(currency);
+        if (value <= 50) {
+            // This is a coin
+            coins.push_back(currency);
+        }
+        else {
+            // This is a bill
+            bills.push_back(currency);
+        }
     }
 }
 
 void VendingMachine::removeCurrency(int value, int quantity) {
-    // First, we need to check if we have enough coins or bills of the specific value
-    for (Currency currency : currencyRepo.getAllCurrencies())
-    {
+    bool found = false;
+
+    // Search in coins
+    for (Currency& currency : coins) {
         if (currency.getValue() == value) {
             if (currency.getQuantity() < quantity) {
                 throw std::runtime_error("Not enough currency of this value to remove");
             }
             currency.setQuantity(currency.getQuantity() - quantity);
             currencyRepo.updateCurrency(currency);
-            return;
+            found = true;
+            break;
         }
     }
-    throw std::runtime_error("Currency not found");
+
+    // Search in bills if not found in coins
+    if (!found) {
+        for (Currency& currency : bills) {
+            if (currency.getValue() == value) {
+                if (currency.getQuantity() < quantity) {
+                    throw std::runtime_error("Not enough currency of this value to remove");
+                }
+                currency.setQuantity(currency.getQuantity() - quantity);
+                currencyRepo.updateCurrency(currency);
+                found = true;
+                break;
+            }
+        }
+    }
+
+    if (!found) {
+        throw std::runtime_error("Currency not found");
+    }
 }
 
 Product* VendingMachine::findProduct(const std::string& code) {
@@ -155,7 +191,7 @@ void VendingMachine::makePurchase(const std::string& productCode, double paidAmo
     }
 
     int price = static_cast<int>(product->getPrice() * 100); // Convert price to integer (in bani)
-    int change = paidAmount - price;
+    int change = static_cast<int>(paidAmount) - price;
 
     if (change < 0) {
         throw std::runtime_error("Insufficient amount paid");
