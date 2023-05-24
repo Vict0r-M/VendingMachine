@@ -30,7 +30,7 @@ public:
     Currency* findCurrency(int value);
 
     bool canMakeChange(int amount) const;
-    void makePurchase(const std::string& productCode, int paidAmount);
+    void makePurchase(const std::string& productCode, double paidAmount);
 
     void saveProductsToFile() const;
     void saveCurrenciesToFile() const;

@@ -9,7 +9,11 @@ void Service::addProduct(const Product& product) {
 }
 
 void Service::removeProduct(const std::string& code) {
+    if (vendingMachine.findProduct(code) == nullptr) {
+        throw std::runtime_error("Product not found.");
+    }
     Product product = *vendingMachine.findProduct(code);
+    
     vendingMachine.removeProduct(code);
     history.push([=]() {vendingMachine.addProduct(product); });
 }
@@ -19,11 +23,14 @@ int Service::convertToBani(const std::string& valueStr) {
         (valueStr == "50 lei") || (valueStr == "100 lei") || (valueStr == "200 lei") || (valueStr == "500 lei")) {
         return std::stoi(valueStr.substr(0, valueStr.length() - 4)) * 100;
     }
-    else if ((valueStr == "1 ban") || (valueStr == "5 bani") || (valueStr == "10 bani") || (valueStr == "50 bani")) {
+    else if ((valueStr == "1 ban")) {
+        return std::stoi(valueStr.substr(0, valueStr.length() - 4));
+    } 
+    else if((valueStr == "5 bani") || (valueStr == "10 bani") || (valueStr == "50 bani")) {
         return std::stoi(valueStr.substr(0, valueStr.length() - 5));
     }
     else {
-        throw std::runtime_error("Invalid currency input.\n");
+        throw std::runtime_error("Invalid currency input.");
     }
 }
 
@@ -77,11 +84,11 @@ Currency Service::getCurrency(int value) {
     return *currency;
 }
 
-void Service::purchase(const std::string& productCode, int paidAmount) {
+void Service::purchase(const std::string& productCode, double paidAmount) {
     // Save initial states
     Product initialProductState = getProduct(productCode);
     std::vector<Currency> initialCurrencyStates;
-    for (Currency& currency : vendingMachine.getCurrencies()) {
+    for (Currency currency : vendingMachine.getCurrencies()) {
         initialCurrencyStates.push_back(getCurrency(currency.getValue()));
     }
 
@@ -89,12 +96,12 @@ void Service::purchase(const std::string& productCode, int paidAmount) {
     vendingMachine.makePurchase(productCode, paidAmount);
 
     // Save undo action
-    history.push([=]() {
-        vendingMachine.updateProduct(initialProductState);
-        for (const Currency& currency : initialCurrencyStates) {
-            vendingMachine.updateCurrency(currency);
-        }
-        });
+    //history.push([=]() {
+    //    vendingMachine.updateProduct(initialProductState);
+    //    for (const Currency& currency : initialCurrencyStates) {
+    //        vendingMachine.updateCurrency(currency);
+    //    }
+    //    });
 }
 
 std::vector<Product> Service::getProducts() const {

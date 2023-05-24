@@ -44,6 +44,11 @@ std::vector<Currency> FileRepository::getAllCurrencies() const {
     return Repository::getAllCurrencies();
 }
 
+void FileRepository::updateProduct(const Product& updatedProduct) {
+    Repository::updateProduct(updatedProduct);
+    saveProductsToFile();
+}
+
 void FileRepository::updateCurrency(const Currency& updatedCurrency) {
     Repository::updateCurrency(updatedCurrency);
     saveCurrenciesToFile();
@@ -109,12 +114,10 @@ void FileRepository::saveCurrenciesToFile() const {
 
 Product* FileRepository::findProductByCode(const std::string& code) {
     // Load the products from the file
-    loadProductsFromFile();
     return Repository::findProductByCode(code);
 }
 
 Currency* FileRepository::findCurrencyByValue(int value) {
     // Load the currencies from the file
-    loadCurrenciesFromFile();
     return Repository::findCurrencyByValue(value);
 }

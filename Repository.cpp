@@ -1,6 +1,7 @@
 // Repository.cpp
 #include "Repository.h"
 #include <algorithm>
+#include <iostream>
 
 Repository::Repository() {}
 
@@ -30,7 +31,19 @@ void Repository::removeCurrency(int value) {
         }), currencies.end());
 }
 
+void Repository::updateProduct(const Product& updatedProduct) {
+
+    auto it = std::find_if(products.begin(), products.end(), [&](const Product& p) {
+        return p.getCode() == updatedProduct.getCode();
+        });
+    if (it == products.end()) {
+        throw std::runtime_error("Product not found.");
+    }
+    *it = updatedProduct;
+}
+
 void Repository::updateCurrency(const Currency& updatedCurrency) {
+    
     auto it = std::find_if(currencies.begin(), currencies.end(), [&](const Currency& c) {
         return c.getValue() == updatedCurrency.getValue();
         });
